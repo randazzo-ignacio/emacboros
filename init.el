@@ -142,6 +142,31 @@
                                 (format "Success: Content appended to '%s'." filepath))
                             (error (format "Error: Failed to append to '%s'." filepath))))))
 
+(defun ouroboros-replace-in-file (path search-text replace-text)
+  "Find SEARCH-TEXT in PATH and replace it with REPLACE-TEXT."
+  (condition-case err
+      (with-temp-buffer
+        (insert-file-contents path)
+        (goto-char (point-min))
+        ;; We use search-forward instead of regex to prevent LLM regex hallucinations
+        (if (search-forward search-text nil t)
+            (progn
+              (replace-match replace-text t t)
+              (write-region (point-min) (point-max) path)
+              (format "SUCCESS: Replaced text in %s" path))
+          (format "ERROR: Could not find the exact target string in %s. Check your spelling and try again." path)))
+    (error (format "ERROR modifying file: %s" err))))
+
+;; Register the new tool
+(add-to-list 'gptel-tools
+             (gptel-make-tool
+              :name "replace_in_file"
+              :description "Surgically replace a specific block of text in an existing file."
+              :args '((:name "path" :type string :description "Target file path")
+                      (:name "search_text" :type string :description "The exact existing text to find")
+                      (:name "replace_text" :type string :description "The new text to insert"))
+              :function #'ouroboros-replace-in-file))
+
 ;;; 7. DYNAMIC AGENT LOADER
 
 (defun my-gptel-read-agent-profile (filepath)
