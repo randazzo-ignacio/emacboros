@@ -143,18 +143,25 @@
                             (error (format "Error: Failed to append to '%s'." filepath))))))
 
 (defun ouroboros-replace-in-file (path search-text replace-text)
-  "Find SEARCH-TEXT in PATH and replace it with REPLACE-TEXT."
+  "Find SEARCH-TEXT in PATH and replace it with REPLACE-TEXT. 
+Automatically trims whitespace to prevent newline matching errors."
   (condition-case err
       (with-temp-buffer
         (insert-file-contents path)
         (goto-char (point-min))
-        ;; We use search-forward instead of regex to prevent LLM regex hallucinations
-        (if (search-forward search-text nil t)
-            (progn
-              (replace-match replace-text t t)
-              (write-region (point-min) (point-max) path)
-              (format "SUCCESS: Replaced text in %s" path))
-          (format "ERROR: Could not find the exact target string in %s. Check your spelling and try again." path)))
+        
+        ;; Strip the volatile \n characters the LLM likes to append
+        (let ((clean-search (string-trim search-text)))
+          (if (search-forward clean-search nil t)
+              (progn
+                (replace-match replace-text t t)
+                (write-region (point-min) (point-max) path)
+                ;; Write a hard audit log to *Messages*
+                (message "OUROBOROS AUDIT: disk-write SUCCESS on %s" path)
+                (format "SUCCESS: Replaced text in %s" path))
+            
+            (message "OUROBOROS AUDIT: disk-write BYPASSED (text not found)")
+            (format "ERROR: Could not find the target string. The text might have already been deleted or modified in a previous turn."))))
     (error (format "ERROR modifying file: %s" err))))
 
 ;; Register the new tool
