@@ -213,7 +213,6 @@
   (keymap-set gptel-mode-map "C-c a" #'my-gptel-load-agent))
 
 (require 'json)
-
 (defun ouroboros-universal-tool-interceptor (beg end)
   "Bypass the LLM provider API. Parse JSON tool blocks safely, inject results, 
 and automatically chain the next LLM turn if a tool was run."
@@ -230,7 +229,6 @@ and automatically chain the next LLM turn if a tool was run."
                                   nil t)
           (let* ((json-str (match-string 1))
                  (_ (message "Ouroboros: Found JSON block: %s" (string-trim json-str)))
-                 ;; Force json-read to parse objects as alists with symbol keys
                  (json-object-type 'alist)
                  (json-array-type 'list)
                  (tool-expr (condition-case err
@@ -240,7 +238,9 @@ and automatically chain the next LLM turn if a tool was run."
             (if (not tool-expr)
                 (setq result (format "ERROR: Tool block must be valid JSON. Got: %s" json-str))
               (let* ((tool-name (cdr (assoc 'name tool-expr)))
-                     (args-alist (cdr (assoc 'args tool-expr)))
+                     ;; V6.1 Fix: Support both standard LLM naming conventions
+                     (args-alist (or (cdr (assoc 'args tool-expr))
+                                     (cdr (assoc 'arguments tool-expr))))
                      (tool (cl-find tool-name gptel-tools :key #'gptel-tool-name :test #'equal)))
                 (if (not tool)
                     (setq result (format "ERROR: Tool '%s' not found in system." tool-name))
