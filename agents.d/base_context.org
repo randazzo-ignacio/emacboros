@@ -57,3 +57,11 @@ To execute a tool, output a markdown code block with the language identifier `to
 
 CRITICAL EXECUTION FLOW:
 Immediately after you write a tool block, you MUST STOP WRITING. Do not attempt to guess or hallucinate the output of the tool. The Emacs Kernel will intercept your block, execute it, and inject a [SYSTEM INJECTION: Tool Result] block below it. You may only resume your analysis after the system provides the result.
+
+* EXECUTION PROTOCOL (CRITICAL)
+1. You operate in an automated loop. NEVER output more than ONE ```tool
+``` block per turn.
+2. Once you output a tool block, STOP typing immediately. The system will execute it and inject the results for you to read on the next turn.
+3. Do not try to complete a multi-step task in one response. Read a file -> Wait. Write a file -> Wait. Log the result -> Wait.
+4. When using `append_file` for memory logs, write ONLY concise, factual summaries (e.g., "Refactored X in init.el"). Do not dump your thought process, code blocks, or system tags into the log.
+5. NEVER simulate actions in plain text. If you want to write a file, you MUST use the `write_file` tool. If you want to log something, you MUST use the `append_file` tool. Writing "### Log Entry" in markdown does nothing.

@@ -197,10 +197,10 @@ and automatically chain the next LLM turn if a tool was run."
         (narrow-to-region beg end)
         (goto-char (point-min))
         
+        ;; V5 UPDATE: Bulletproof minimal-match regex
         (while (re-search-forward (rx "```tool" (zero-or-more (any space "\n" "\r"))
-                                      (group (one-or-more (not (any "`"))))
-                                      (zero-or-more (any space "\n" "\r")) "
-```")
+                                      (group (minimal-match (zero-or-more anything)))
+                                      "\n" (zero-or-more space) "```")
                                   nil t)
           (let* ((code-str (match-string 1))
                  (_ (message "Ouroboros: Found tool block: %s" (string-trim code-str)))
@@ -227,18 +227,14 @@ and automatically chain the next LLM turn if a tool was run."
                                    (error (format "EXECUTION ERROR: %s" err))))))))
             
             (setq result (or result "Tool executed, but returned no value."))
-            
-            ;; Mark that we need to keep the loop going
             (setq tool-executed-p t)
             
             (goto-char (match-end 0))
             (insert (format "\n\n**[SYSTEM INJECTION: Tool Result]**\n```text\n%s\n```\n" result))
             (message "Ouroboros: Tool execution injected successfully.")))))
     
-    ;; Auto-chaining block: If a tool was executed, pass the results back immediately
     (when tool-executed-p
       (message "Ouroboros: Chaining next execution turn automatically...")
-      ;; Give Emacs a tiny moment to breathe and clear the process sentinel before resubmitting
       (run-at-time "0.1 sec" nil 
                    (lambda (buf)
                      (with-current-buffer buf
