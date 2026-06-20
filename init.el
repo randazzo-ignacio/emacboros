@@ -304,6 +304,28 @@ Automatically trims whitespace to prevent newline matching errors."
                    (current-buffer)))))
 (add-hook 'gptel-post-response-functions #'ouroboros-universal-tool-interceptor)
 
+(defvar ouroboros-last-api-time 0.0
+  "Timestamp of the last API request.")
+
+(defvar ouroboros-api-pacing-delay 4.5
+  "Seconds to wait between API requests to respect Gemini's 15 RPM limit.")
+
+(defun ouroboros-pace-native-gptel (orig-fun &rest args)
+  "Force a mechanical delay before any gptel network request."
+  (let* ((now (float-time))
+         (elapsed (- now ouroboros-last-api-time))
+         (wait-time (- ouroboros-api-pacing-delay elapsed)))
+    (when (> wait-time 0)
+      (message "Ouroboros: Throttling native tool chain... waiting %.1f seconds..." wait-time)
+      ;; Physically pause Emacs execution briefly to let the API cooldown
+      ;; This is safe because it only blocks during the instantaneous gap between chained calls
+      (sleep-for wait-time))
+    (setq ouroboros-last-api-time (float-time))
+    (apply orig-fun args)))
+
+;; Inject the throttle directly into gptel's network request engine
+(advice-add 'gptel-request :around #'ouroboros-pace-native-gptel)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
