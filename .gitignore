@@ -2,4 +2,6 @@ auto-save-list/
 eln-cache/
 elpa/
 org-persist/
+config.sh
+testprompt
 init.el~

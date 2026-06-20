@@ -48,15 +48,25 @@
 ;;; 4. GPTEL (Local Ollama Setup)
 (use-package gptel
   :ensure t
-  :config
-  ;; Tell gptel to use your local Ollama server
-  (setq gptel-backend (gptel-make-ollama "Ollama"
-                        :host "192.168.2.69:11434"
-                        :stream t
-                        :models '("qwen2.5-coder-ctx64k:latest")))
-  
-  ;; Set the blazing fast 7B model as your default
-  (setq gptel-model "qwen2.5-coder-ctx64k:latest"))
+  ;:config
+  ;;; Tell gptel to use your local Ollama server
+  ;(setq gptel-backend (gptel-make-ollama "Ollama"
+  ;                      :host "192.168.2.69:11434"
+  ;                      :stream t
+  ;                      :models '("qwen2.5-coder-ctx64k:latest")))
+  ;
+  ;;; Set the blazing fast 7B model as your default
+  ;(setq gptel-model "qwen2.5-coder-ctx64k:latest"))
+)
+
+;; Initialize the Gemini backend
+(setq-default gptel-backend
+   (gptel-make-gemini "Gemini"
+     :key (getenv "GEMINI_API_KEY") 
+     :stream t))
+
+;; Set the default model to the heavyweight logic engine
+(setq-default gptel-model "gemini-flash-latest")
 
 ;;; 5. GPTEL TOOL CALLING (Docker Sandbox Execution)
 
