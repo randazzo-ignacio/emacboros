@@ -5,8 +5,9 @@
 ;;
 ;; The delegate spawns a temporary gptel buffer, loads the target agent profile,
 ;; sends the task as a prompt, waits for the response, and returns it.
-;; The delegate tool itself is removed from the sub-agent's tool set to
-;; prevent infinite recursion.
+;; The delegate tool is available to sub-agents up to a maximum depth
+;; (my-gptel--delegate-max-depth, default 3) to allow multi-hop chains
+;; while preventing infinite recursion.
 
 (require 'gptel)
 (require 'cl-lib)
@@ -21,6 +22,15 @@ Set by `my-gptel--delegate-completion-hook' when the gptel FSM reaches DONE.")
 (defvar-local my-gptel--delegate-done nil
   "Buffer-local: flag set when delegate request completes (success or error).
 Set by `my-gptel--delegate-completion-hook'.")
+
+(defvar-local my-gptel--delegate-depth 0
+  "Buffer-local: current delegation depth for this agent session.
+0 = top-level agent (not spawned via delegate).
+1+ = spawned via delegate. Used to limit recursion depth.")
+
+(defconst my-gptel--delegate-max-depth 3
+  "Maximum delegation depth allowed. Prevents infinite recursion
+while permitting multi-hop chains (e.g., A -> B -> A -> B).")
 
 ;;; Internal functions
 
@@ -53,34 +63,41 @@ Returns a plist with :buffer, :task-id, :agent, :start-time."
          (buf (get-buffer-create (format "*gptel-delegate-%s*" task-id)))
          (full-prompt (format "DELEGATED TASK FROM PARENT AGENT\n==============================\n\nCONTEXT:\n%s\n\nTASK:\n%s"
                               context task)))
-    (unless profile
+                (unless profile
       (error "Agent profile '%s' not found in agents.d/" agent-name))
-    (with-current-buffer buf
-      (text-mode)
-      (gptel-mode 1)
-      ;; Set the agent profile as the system prompt
-      (setq-local gptel-system-prompt profile)
-      ;; Disable delegate tool in sub-agent to prevent infinite recursion
-      (setq-local gptel-tools
-                  (cl-remove-if (lambda (tool)
-                                  (equal (gptel-tool-name tool) "delegate"))
-                                (copy-sequence gptel-tools)))
-      ;; Initialize completion state
-      (setq-local my-gptel--delegate-response nil)
-      (setq-local my-gptel--delegate-done nil)
-      ;; Add completion hook (buffer-local, runs at DONE/ERRS state)
-      (add-hook 'gptel-post-response-functions
-                #'my-gptel--delegate-completion-hook
-                nil t)
-      ;; Insert the prompt text into the buffer, then call gptel-send
-      ;; with NO argument (nil arg = normal send, reads buffer up to point).
-      ;; Do NOT pass the prompt string as an argument to gptel-send --
-      ;; gptel-send's optional arg is a prefix arg, not a prompt.
-                  (insert full-prompt)
-      (let ((response-start (point)))
-        (gptel-send)
-        (list :buffer buf :task-id task-id :agent agent-name
-                            :start-time (current-time) :response-start response-start)))))
+    ;; Read parent's delegation depth BEFORE switching to new buffer
+    (let ((parent-depth (if (boundp 'my-gptel--delegate-depth)
+                            my-gptel--delegate-depth
+                          0)))
+      (with-current-buffer buf
+        (text-mode)
+        (gptel-mode 1)
+        ;; Set the agent profile as the system prompt
+        (setq-local gptel-system-prompt profile)
+        ;; Track delegation depth: inherit parent's depth + 1
+        (setq-local my-gptel--delegate-depth (1+ parent-depth))
+        ;; Only remove delegate tool if we've hit max depth (recursion limit)
+        (when (>= my-gptel--delegate-depth my-gptel--delegate-max-depth)
+          (setq-local gptel-tools
+                      (cl-remove-if (lambda (tool)
+                                      (equal (gptel-tool-name tool) "delegate"))
+                                    (copy-sequence gptel-tools))))
+        ;; Initialize completion state
+        (setq-local my-gptel--delegate-response nil)
+        (setq-local my-gptel--delegate-done nil)
+        ;; Add completion hook (buffer-local, runs at DONE/ERRS state)
+        (add-hook 'gptel-post-response-functions
+                  #'my-gptel--delegate-completion-hook
+                  nil t)
+        ;; Insert the prompt text into the buffer, then call gptel-send
+        ;; with NO argument (nil arg = normal send, reads buffer up to point).
+        ;; Do NOT pass the prompt string as an argument to gptel-send --
+        ;; gptel-send's optional arg is a prefix arg, not a prompt.
+        (insert full-prompt)
+        (let ((response-start (point)))
+          (gptel-send)
+          (list :buffer buf :task-id task-id :agent agent-name
+                              :start-time (current-time) :response-start response-start))))))
 
 (defun my-gptel--wait-for-delegate (delegate-info timeout)
   "Wait for delegate buffer to finish processing. Returns the response string.
