@@ -1,12 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
-
 (add-to-list 'load-path (expand-file-name "init.d" user-emacs-directory))
+
+;; Package manager setup
+(load "package_setup.el")
 
 ;; UI cleanup
 (load "ui_cleanup.el")
