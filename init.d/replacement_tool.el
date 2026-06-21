@@ -13,7 +13,7 @@
                 (write-region (point-min) (point-max) path)
                 (message "SUCCESS: Replaced text in %s" path))
             (message "ERROR: Target string not found."))))
-    (error (format "ERROR modifying file: %s" err))))
+    (error (format "Error: Could not modify file '%s'. Reason: %s" err))))
 
 (add-to-list 'gptel-tools
  (gptel-make-tool

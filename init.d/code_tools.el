@@ -37,9 +37,9 @@ only on true hangs, not legitimate long-running commands."
         (let ((output (with-current-buffer buf (buffer-string))))
           (cond
            ;; Normal completion
-           (done
+                      (done
             (if (and exit-code (/= exit-code 0))
-                (format "[exit %d]\n%s" exit-code output)
+                (format "Command exited with code %d.\nOutput:\n%s" exit-code output)
               output))
            ;; Timeout: kill process, return partial output
            (t
