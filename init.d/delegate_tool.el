@@ -95,12 +95,16 @@ behaving as if the sub-agent simply reached its output limit."
          response)
     (unwind-protect
         (progn
-          ;; Poll for completion flag (set by gptel-post-response-functions hook)
+                    ;; Poll for completion flag (set by gptel-post-response-functions hook)
+          ;; Use accept-process-output to yield to Emacs' event loop, allowing
+          ;; redisplay, input processing, and -- critically -- gptel's own
+          ;; url-retrieve/curl process output to flow. This keeps Emacs
+          ;; responsive while waiting for the sub-agent to finish.
           (while (and (buffer-live-p buf)
                       (not (buffer-local-value 'my-gptel--delegate-done buf))
                       (or (null timeout)
                           (time-less-p (current-time) deadline)))
-            (sit-for 0.2))
+            (accept-process-output nil 0.1))
           ;; Check for buffer death, timeout, or completion
           (cond
            ((not (buffer-live-p buf))
@@ -108,8 +112,8 @@ behaving as if the sub-agent simply reached its output limit."
            ((and timeout
                  (not (buffer-local-value 'my-gptel--delegate-done buf)))
             ;; Timeout reached: abort the request and capture partial response
-            (gptel-abort buf)
-            (sit-for 0.3)  ; brief pause to let abort settle
+                        (gptel-abort buf)
+            (accept-process-output nil 0.3)  ; brief pause to let abort settle
             (let ((partial
                    (when (buffer-live-p buf)
                      (with-current-buffer buf

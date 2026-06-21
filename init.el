@@ -26,4 +26,4 @@
 (load "agent_loader.el")
 
 ;; Multi-agent delegation tool
-(load "delegate_tool.el")
+;(load "delegate_tool.el")
