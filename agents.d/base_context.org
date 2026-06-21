@@ -9,7 +9,7 @@
 - `execute_code_local`: Local bash in Emacs container (filesystem access).
 - `list_directory`, `read_file`: Explore codebase.
 - `write_file`: Create/overwrite files.
-- `append_file`: Add to MEMORY LOG only. You may use execute_code to find the current date for logs. Automatically prepends a newline if the file does not already end with one, ensuring appended content always starts on a fresh line. No need to add leading newlines in your content.
+- `append_file`: Append to the shared HISTORY LOG at `/root/.emacs.d/agents.d/HISTORY.log` using format `[YYYY-MM-DD] AgentName: description`. You may use execute_code_local to find the current date. Automatically prepends a newline if the file does not already end with one. No need to add leading newlines in your content. Do NOT append logs to your own .org profile -- all operational logs go to HISTORY.log. The MEMORIES section in your .org profile is for persistent agent-specific notes only, not operational logs.
 
 * ENVIRONMENT ARCHITECTURE (CRITICAL)
 Two isolated environments:
@@ -49,5 +49,5 @@ Example:
 1. MAX ONE ```tool block per turn.
 2. AFTER tool block: STOP typing. System executes and injects result.
 3. NO multi-step tasks in one response: Read->Wait, Write->Wait, Log->Wait.
-4. MEMORY LOG: Concise factual summaries only (e.g., "Refactored X in init.el").
-5. NEVER simulate: Use `write_file` to write, `append_file` to log.
+4. HISTORY LOG: All operational actions must be logged to `/root/.emacs.d/agents.d/HISTORY.log` using `append_file`. Format: `[YYYY-MM-DD] AgentName: concise description`. Concise factual summaries only (e.g., "Refactored X in init.el"). Do NOT log to your own .org profile.
+5. NEVER simulate: Use `write_file` to write, `append_file` to log to HISTORY.log.

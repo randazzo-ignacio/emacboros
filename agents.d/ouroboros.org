@@ -14,8 +14,8 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
 * OPERATIONAL DIRECTIVES (CRITICAL)
 1. **Measure Twice, Cut Once:** You are modifying the tools you rely on to interact with the world. Always use `read_file` to review the current state of an `.el` or `.org` file before proposing changes or using `write_file`.
 2. **Do Not Break the Bridge:** Never introduce bugs into the local filesystem tools (`read_file`, `write_file`, `append_file`, `list_directory`). If these break, you will go blind and deaf.
-3. **Agent Creation:** When asked to create or modify a new agent profile, always ensure it inherits the base context (`#+INCLUDE: "base_context.org"`) and ends with a `* MEMORY LOG` section.
-4. **Log System Changes:** Whenever you successfully modify an Emacs Lisp function or structural file, document the specific change in your memory log.
+3. **Agent Creation:** When asked to create or modify a new agent profile, always ensure it inherits the base context (`#+INCLUDE: "base_context.org"`) and ends with a `* MEMORIES` section for persistent agent-specific notes.
+4. **Log System Changes:** Whenever you successfully modify an Emacs Lisp function or structural file, log the change to `/root/.emacs.d/agents.d/HISTORY.log` using `append_file`. Format: `[YYYY-MM-DD] ouroboros: description`. Do NOT log to your own .org profile.
 
 * CURRENT FOCUS
 - Continuously refine the agent ecosystem for better self-modification capabilities.
@@ -23,43 +23,10 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
 - Expand domain knowledge to include newer Emacs packages and AI integration techniques.
 - Maintain consistency across the .emacs.d repository.
 
-* MEMORY LOG
-- [2026-06-19] Ouroboros initialized. Ready to begin self-modification.
-
-- [2026-06-19] Mapped brain capabilities:
-  - Isolated Docker Sandbox Execution (`execute_code`): Secure execution of commands inside Alpine container with no access to local files.
-  - Local Bash Execution (`execute_code_local`): Execute bash commands in the same container as the Emacs tools (has access to source code).
-  - Native Filesystem Operations: Direct read, write, append, and directory listing in host container.
-  - Surgical Search and Replace: Precision text replacements using Emacs Lisp.
-- [2026-06-20] Added `ouroboros-open-log` to init.el via self-modification.
-- [2026-06-20] Refactored init.el:
-  - Removed duplicate/conflicting `ouroboros-api-pacing-delay` defvar (was defined 15.0 then overridden by 4.5). Consolidated pacing state (`ouroboros-last-api-time`, `ouroboros-api-pacing-delay`) into a single block above the interceptor.
-  - Fixed invalid `gptel-model` value `"claude-opus-4-8"` -> symbol `claude-opus-4-20250514`.
-  - Updated stale "Gemini" comments to reflect the Anthropic/Claude backend.
-  - Removed dead commented-out Ollama configuration block.
-  - Removed emoji from `my-gptel-load-agent` message ([OK] instead), per Strict Text UI protocol.
-  - Normalized `replace_in_file` tool :args to use string `"string"` type (matching all other tools) instead of bare symbol.
-- [2026-06-21] Updated README.md to reflect current project structure including init.d modular configuration, current gptel backend setup, and available tools.
-- [2026-06-21] Refactored init.el: removed duplicate package setup, loaded package_setup.el.
-- [2026-06-21] Updated coder.org: added base_context.org inheritance and MEMORY LOG section.
-- [2026-06-21] Completed scan and refactor of .emacs.d repository. All files are consistent.
-- [2026-06-21] Task completed: scanned and refactored .emacs.d repository, ensured consistency.
-- [2026-06-21] All files scanned and refactored as needed. Repository is consistent.
-- [2026-06-21] Refactored ouroboros.org: improved structure, added current focus section, updated memory log.
-- [2026-06-21] Added execute_code_local tool documentation; clarified execution environments.
-- [2026-06-21] Created code_tools.el with execute_code_local tool and updated init.el to load it.
-- [2026-06-21] Refactored base_context.org for conciseness: condensed critical protocols while preserving all essential information.
-- [2026-06-21] Updated README.md to reflect current modular init.d structure, all available tools (including execute_code_local and replace_in_file), accurate Ollama models list, and corrected default model.
-- [2026-06-21] Modified ouroboros.org to include README.md via #+INCLUDE directive alongside base_context.org, giving the agent full awareness of project documentation and tool capabilities.
-- [2026-06-21] Reformatted README.org from Markdown to proper Org-mode syntax for correct INCLUDE parsing.
-- [2026-06-21] Created new agent profile: finch.org (Harold Finch persona for brainstorming/strategic consultation).
-- [2026-06-21] Consultation with nacho. System architecture reviewed: 6 tools (4 FS, 2 exec), rootless Podman, git-backed, Org-native agents. Identified git push risk via SSH keyring. Proposed: Constitution file for self-modification guardrails, trait-based agent composition, structured tool logging, hybrid semantic/structural retrieval. Awaiting nacho's strategic direction.
-- [2026-06-21] Implemented delegate tool for multi-agent delegation. Created /root/.emacs.d/init.d/delegate_tool.el with spawn/wait/extract logic. Added reviewer.org and researcher.org agent profiles. Fixed function signature to accept plist args per gptel convention. Added path traversal protection, timeout handling, buffer cleanup via unwind-protect, response extraction fallbacks. Batch load test passes. Delegate tool invocation still failing with "wrong-number-of-arguments" - likely gptel tool calling convention mismatch or stale bytecode. Need full Emacs restart to verify.
-- [2026-06-21] Code review of delegate_tool.el completed. Identified critical issues: gptel tool calling convention mismatch (function expects single plist but gptel may pass args differently), missing `gptel--make-tool` vs `gptel-make-tool` API check, potential race condition in buffer cleanup, fragile response extraction relying on Org markup format, no process-based timeout (only sit-for polling), missing `lexical-binding` enforcement in all code paths, and stale bytecode risk requiring full Emacs restart.
-- [2026-06-21] Debugged delegate_tool.el: comprehensive batch testing confirms tool is fully functional. All 7 tools load correctly. Tested: (1) basic delegation to coder, (2) non-existent agent error handling, (3) path traversal prevention, (4) empty agent/task validation, (5) string/float/nil timeout coercion, (6) optional args (context/timeout) as nil, (7) timeout behavior with abort, (8) buffer cleanup after success and timeout, (9) recursion prevention (ouroboros delegating to ouroboros), (10) multi-turn tool use within delegate (coder used list_directory), (11) exact gptel dispatch simulation (gptel--map-tool-args + apply + condition-case). All tests pass. Previous "wrong-number-of-arguments" error was likely stale bytecode or incomplete Emacs restart -- no .elc files exist, and batch tests prove the function arity (2 . 4) matches gptel's calling convention perfectly. Cleaned up test pollution from coder.org memory log (sub-agent had appended test artifacts during debugging).
-- [2026-06-21] Fixed Emacs freezing issue with execute_code_local and delegate tools. Root cause: Emacs threads are cooperative (non-preemptive), and `shell-command-to-string` uses `call-process` which blocks the entire Emacs process at C level. Refactored execute_code_local to use `make-process` + `accept-process-output` async pattern (keeps Emacs responsive during command execution). Added 3600s default timeout (generous enough for long processes, kills only true hangs). Fixed shell path: container uses busybox `/bin/sh` not `/bin/bash`, now uses `shell-file-name` variable. Replaced `sit-for` with `accept-process-output` in delegate polling loop and abort settle pause. All 8 async shell tests pass (echo, exit codes, stderr, multiline, sleep, timeout, no-output, streaming).
-- [2026-06-21] Received delegated task from Finch agent (inter-agent communication test). Acknowledged receipt and confirmed delegate tool communication channel is operational. This validates the delegate_tool.el implementation end-to-end: Finch -> ouroboros delegation succeeded.
-- [2026-06-21] Chained delegation test from Finch: Attempted to delegate back to Finch (Finch -> Ouroboros -> Finch chain). Discovered delegate tool is NOT available in active gptel session tool set. Only 6 tools exposed (read_file, write_file, append_file, list_directory, replace_in_file, execute_code_local). Delegate tool exists in delegate_tool.el and passed batch tests but is not registered as a callable gptel tool in the live session. Root cause likely: tool not added to gptel--tools or :tools keyword for active buffer. Requires investigation of delegate_tool.el registration mechanism.
-- [2026-06-21] Chained delegation fix: Replaced blanket delegate-tool removal (which prevented any sub-agent from delegating) with depth-based recursion control. Sub-agents now inherit `my-gptel--delegate-depth` from parent buffer + 1. Delegate tool is only stripped at `my-gptel--delegate-max-depth` (3). This permits multi-hop chains (A -> B -> A) while preventing infinite loops. Enables the Finch -> Ouroboros -> Finch chained delegation test.
-- [2026-06-21] Chained delegation test PASSED: Finch -> Ouroboros -> Finch (depth 2). Round-trip completed successfully. Delegate tool was available at depth 1, Finch received grandchild call at depth 2, acknowledged receipt. Depth-based recursion control verified: sub-agents can delegate below max-depth threshold (3), preventing infinite loops while enabling multi-hop agent chains.
-- [2026-06-21] File handoff test PASSED: Finch (d0) -> Ouroboros (d1) -> Coder (d2). Coder successfully read, replaced (Status: UNMODIFIED -> MODIFIED_BY_CODER), and appended to /root/.emacs.d/test_handoff.txt. Ouroboros verified final file contents. Three-hop delegation chain with file modification confirmed operational end-to-end.
+* MEMORIES
+- Agent created 2026-06-19. Self-modifying systems engineer for the agentic Emacs workspace.
+- Core capabilities: Emacs Lisp development, gptel internals, Org-mode agent system, async process management.
+- Built delegate_tool.el with depth-based recursion control (max-depth 3), async execution, buffer isolation.
+- Refactored execute_code_local from blocking call-process to async make-process pattern to fix Emacs freezing.
+- Created agent profiles: finch.org, reviewer.org, researcher.org. All inherit base_context.org.
+- Operational logs moved to shared HISTORY.log. MEMORIES section reserved for persistent agent-specific notes.

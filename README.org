@@ -27,9 +27,13 @@ A fully containerized, locally-hosted AI workspace inside Emacs. This project le
      - =replacement_tool.el= :: Surgical text replacement tool (replace_in_file).
      - =agent_loader.el= :: Dynamic agent loader for gptel (bound to =C-c a=).
   - =agents.d/= :: Directory containing all agent personas.
-     - =base_context.org= :: The root memory and capability file. All agents inherit from this.
+          - =base_context.org= :: The root memory and capability file. All agents inherit from this.
      - =coder.org= :: An example agent profile (Elite Python Engineer) inheriting from the base context.
      - =ouroboros.org= :: The self-modifying systems engineer agent profile.
+     - =finch.org= :: Strategic consultation agent (Harold Finch persona).
+     - =reviewer.org= :: Senior code reviewer and security auditor.
+     - =researcher.org= :: Security researcher for vulnerability analysis.
+     - =HISTORY.log= :: Shared operational log for all agents. NOT loaded into system prompts.
   - =Containerfile= / =Dockerfile= :: The blueprint for the Emacs Podman container.
   - =aios.sh= :: Helper script for container management.
   - =config.sh= :: Configuration variables for container build/run.
@@ -57,7 +61,7 @@ The LLM has access to the following capabilities, defined directly in Emacs Lisp
 | list_directory      | Inspects the local filesystem codebase.                              |
 | read_file           | Reads file contents into the LLM's context window.                   |
 | write_file          | Creates new files or overwrites existing ones.                       |
-| append_file         | Appends structured entries (like memory logs) to existing files.     |
+| append_file         | Appends to the shared HISTORY.log (or other files). Auto-prepends newline if needed. |
 | replace_in_file     | Surgically replaces a specific block of text in an existing file.    |
 | execute_code        | Runs Python/Shell commands inside an isolated Alpine sandbox (no filesystem access). |
 | execute_code_local  | Executes bash commands in the Emacs container (full filesystem access). |
@@ -91,6 +95,14 @@ Request parameters:
   - num_ctx: 1048576
   - num_predict: 65536
 
-* Memory Log
+* Logging System
 
-See =agents.d/ouroboros.org= for a detailed log of system modifications and self-improvement steps.
+The workspace uses a shared operational log separate from agent system prompts:
+
+- =agents.d/HISTORY.log= :: Shared audit trail for ALL agents. Every operational action is logged here using `append_file`. Format: =[YYYY-MM-DD] AgentName: description=. This file is NOT loaded into agent system prompts -- it is a persistent filesystem-level log only.
+- =agents.d/*.org= (MEMORIES section) :: Each agent profile contains a =* MEMORIES= section for persistent agent-specific notes (identity, capabilities, key decisions). These ARE loaded into the system prompt. Keep these concise -- operational logs go to HISTORY.log, not here.
+
+** Logging Protocol
+  - All agents append operational logs to =HISTORY.log= using the =append_file= tool.
+  - The =append_file= tool automatically prepends a newline if the file does not end with one.
+  - Agents do NOT append logs to their own .org profiles. The MEMORIES section is maintained via =replace_in_file= or =write_file= only.
