@@ -73,10 +73,10 @@
                                     ""
                                   "\n"))
                             "")))
-                                        ;; Atomic append: write to temp file, then rename over target
-                    (let ((tmp-file (make-temp-file "gptel-append-")))
-                      (write-region (concat prefix content) nil tmp-file nil 'silent)
-                      (rename-file tmp-file expanded-path t))
+                    ;; Direct append: write-region with append flag preserves existing content.
+                    ;; (Atomic temp+rename would require reading entire file into memory first,
+                    ;; which is wasteful and was the root cause of the data-loss bug.)
+                    (write-region (concat prefix content) nil expanded-path t 'silent)
                     (format "Success: Content appended to '%s'" expanded-path))
                 (error (format "Error: Failed to append to '%s'. Emacs says: %s"
                                filepath (error-message-string err)))))))
