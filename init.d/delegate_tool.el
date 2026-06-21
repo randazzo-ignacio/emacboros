@@ -80,7 +80,7 @@ Returns a plist with :buffer, :task-id, :agent, :start-time."
       (let ((response-start (point)))
         (gptel-send)
         (list :buffer buf :task-id task-id :agent agent-name
-              :start-time (current-time) :response-start response-start))))
+                            :start-time (current-time) :response-start response-start)))))
 
 (defun my-gptel--wait-for-delegate (delegate-info timeout)
   "Wait for delegate buffer to finish processing. Returns the response string.

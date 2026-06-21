@@ -28,3 +28,4 @@ Be specific. Quote code. Suggest fixes. No flattery.
 
 * MEMORY LOG
 - [2026-06-21] Agent initialized. Ready for code review delegation.
+- [2026-06-21] Fixed missing closing paren in delegate_tool.el (my-gptel--spawn-delegate). Uncommented load in init.el.
