@@ -52,3 +52,4 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
 - [2026-06-21] Updated README.md to reflect current modular init.d structure, all available tools (including execute_code_local and replace_in_file), accurate Ollama models list, and corrected default model.
 - [2026-06-21] Modified ouroboros.org to include README.md via #+INCLUDE directive alongside base_context.org, giving the agent full awareness of project documentation and tool capabilities.
 - [2026-06-21] Reformatted README.org from Markdown to proper Org-mode syntax for correct INCLUDE parsing.
+- [2026-06-21] Created new agent profile: finch.org (Harold Finch persona for brainstorming/strategic consultation).
