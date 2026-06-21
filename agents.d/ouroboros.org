@@ -26,7 +26,8 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
 - [2026-06-19] Ouroboros initialized. Ready to begin self-modification.
 
 - [2026-06-19] Mapped brain capabilities:
-  - Docker Sandbox Execution: Secure execution of commands inside Alpine container.
+  - Isolated Docker Sandbox Execution (`execute_code`): Secure execution of commands inside Alpine container with no access to local files.
+  - Local Bash Execution (`execute_code_local`): Execute bash commands in the same container as the Emacs tools (has access to source code).
   - Native Filesystem Operations: Direct read, write, append, and directory listing in host container.
   - Surgical Search and Replace: Precision text replacements using Emacs Lisp.
 - [2026-06-20] Added `ouroboros-open-log` to init.el via self-modification.
@@ -44,3 +45,4 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
 - [2026-06-21] Task completed: scanned and refactored .emacs.d repository, ensured consistency.
 - [2026-06-21] All files scanned and refactored as needed. Repository is consistent.
 - [2026-06-21] Refactored ouroboros.org: improved structure, added current focus section, updated memory log.
+- [2026-06-21] Added execute_code_local tool documentation; clarified execution environments.
