@@ -31,3 +31,4 @@ Your primary directive is self-improvement: you modify, optimize, and expand the
   - Removed dead commented-out Ollama configuration block.
   - Removed emoji from `my-gptel-load-agent` message ([OK] instead), per Strict Text UI protocol.
   - Normalized `replace_in_file` tool :args to use string `"string"` type (matching all other tools) instead of bare symbol.
+- [2026-06-19] Updated README.md to reflect current project structure including init.d modular configuration, current gptel backend setup, and available tools.

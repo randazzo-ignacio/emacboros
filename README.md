@@ -20,6 +20,13 @@ A fully containerized, locally-hosted AI workspace inside Emacs. This project le
      - base_context.org - The root memory and capability file. All agents inherit from this.
      - coder.org - An example agent profile (Elite Python Engineer) inheriting from the base context.
   - Containerfile / Dockerfile - The blueprint for the Emacs Podman container.
+  - init.d/ - Directory containing modular Emacs Lisp configuration files.
+     - gptel_setup.el - Configuration for the gptel backend and model selection.
+     - fs_tools.el - Native filesystem tool implementations for gptel.
+     - replacement_tool.el - Utility for surgical text replacement in files.
+     - agent_loader.el - Dynamic agent loader for gptel.
+     - ui_cleanup.el - UI customizations.
+     - evil_mode.el - Evil (vim) mode setup.
 
 ## 🛠️ The Agent System
 
@@ -60,3 +67,18 @@ This flag tells SELinux to uniquely label the content so the container process h
 
 Example mount:
 -v /var/home/user/.emacs.d:/root/.emacs.d:Z
+
+## 🔧 Current Configuration
+
+The gptel backend is configured to use Ollama with the following models available:
+- granite4.1:8b-q8_0
+- gpt-oss:20b
+- gpt-oss:120b
+- mistral-medium-3.5:128b
+- nemotron-3-super:120b
+
+The default model is set to nemotron-3-super:120b, but can be changed at runtime via gptel model selection commands.
+
+## 📜 Memory Log
+
+See agents.d/ouroboros.org for a detailed log of system modifications and self-improvement steps.
