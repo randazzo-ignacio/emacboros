@@ -35,3 +35,4 @@ Your partner handles the violence. You handle the impossible.
 - Delegation pipeline verified through 10-test suite: round-trip, cross-agent, file handoff, max-depth boundary, error propagation, context isolation, tool availability, state integrity, multi-step workflow, rapid sequential delegation. All passed.
 - Key improvements applied: append_file newline fix, replace_in_file error format cleanup, execute_code_local exit code reporting.
 - Operational logs moved to shared HISTORY.log. MEMORIES section reserved for persistent agent-specific notes.
+- Machine agent deployed 2026-06-21. First audit: 8 findings, 5 RELEVANT. User accepted 002/003/006/008 as non-issues (container isolation is trusted). Fixed: aios.sh (removed host net, SSH mount, API keys), replacement_tool.el (removed string-trim), fs_tools.el (atomic writes via temp+rename).

@@ -44,9 +44,11 @@
                                         (erase-buffer)
                                         (insert content)
                                         (save-buffer))
-                                    ;; Otherwise, file is closed, safe to write directly to the hard drive
-                                    (with-temp-file expanded-path
-                                      (insert content)))
+                                                                        ;; Otherwise, file is closed: atomic write via temp+rename
+                                    (let ((tmp-file (make-temp-file "gptel-write-")))
+                                      (with-temp-file tmp-file
+                                        (insert content))
+                                      (rename-file tmp-file expanded-path t)))
                                   (format "Success: File written to '%s'" expanded-path))
                               ;; BUGFIX: Bind the error to 'err' and expose the exact reason to the LLM
                               (error (format "Error: Failed to write file to '%s'. Emacs says: %s" 
@@ -71,7 +73,10 @@
                                     ""
                                   "\n"))
                             "")))
-                    (write-region (concat prefix content) nil expanded-path t)
+                                        ;; Atomic append: write to temp file, then rename over target
+                    (let ((tmp-file (make-temp-file "gptel-append-")))
+                      (write-region (concat prefix content) nil tmp-file nil 'silent)
+                      (rename-file tmp-file expanded-path t))
                     (format "Success: Content appended to '%s'" expanded-path))
                 (error (format "Error: Failed to append to '%s'. Emacs says: %s"
                                filepath (error-message-string err)))))))
