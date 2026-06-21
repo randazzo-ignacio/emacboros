@@ -56,12 +56,22 @@
 (add-to-list 'gptel-tools
  (gptel-make-tool
   :name "append_file"
-  :description "Append text content to the end of an existing file. Use this to add new notes, logs, or subheadings to a file without erasing its current contents."
+  :description "Append text content to the end of an existing file. Use this to add new notes, logs, or subheadings to a file without erasing its current contents. Automatically prepends a newline if the file does not already end with one, ensuring appended content always starts on a fresh line."
   :args (list '(:name "filepath" :type "string" :description "Absolute path to the file.")
               '(:name "content" :type "string" :description "The text content to add to the end of the file."))
   :function (lambda (filepath content)
-              (condition-case nil
-                  (progn
-                    (write-region content nil filepath t)
-                    (format "Success: Content appended to '%s'" filepath))
-                (error (format "Error: Failed to append to '%s'" filepath))))))
+              (condition-case err
+                  (let* ((expanded-path (expand-file-name filepath))
+                         (prefix
+                          (if (and (file-exists-p expanded-path)
+                                   (> (file-attribute-size (file-attributes expanded-path)) 0))
+                              (with-temp-buffer
+                                (insert-file-contents expanded-path)
+                                (if (string-suffix-p "\n" (buffer-string))
+                                    ""
+                                  "\n"))
+                            "")))
+                    (write-region (concat prefix content) nil expanded-path t)
+                    (format "Success: Content appended to '%s'" expanded-path))
+                (error (format "Error: Failed to append to '%s'. Emacs says: %s"
+                               filepath (error-message-string err))))))
