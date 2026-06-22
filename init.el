@@ -27,3 +27,6 @@
 
 ;; Multi-agent delegation tool
 (load "delegate_tool.el")
+
+;; Reload tools (reload_os, reload_agent)
+(load "reload_tools.el")

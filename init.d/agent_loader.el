@@ -29,6 +29,8 @@
       (gptel-mode 1))
     (setq-local gptel-system-message profile)
     (setq-local gptel--system-message profile)
+    ;; Track which agent file was loaded (for reload_agent tool)
+    (setq-local my-gptel--current-agent-file full-path)
     (message "[OK] Agent %s loaded!" chosen)))
 
 (with-eval-after-load 'gptel
