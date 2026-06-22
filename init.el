@@ -30,3 +30,9 @@
 
 ;; Reload tools (reload_os, reload_agent)
 (load "reload_tools.el")
+
+;; Memory summarization tool (C-c m in gptel-mode)
+(load "memory_tools.el")
+
+;; Elisp syntax checker tool
+(load "check_elisp_tool.el")
