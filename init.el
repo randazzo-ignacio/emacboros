@@ -36,3 +36,6 @@
 
 ;; Elisp syntax checker tool
 (load "check_elisp_tool.el")
+
+;; Task reader and unified history tools
+(load "task_tools.el")

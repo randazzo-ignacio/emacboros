@@ -1,19 +1,19 @@
 - Agent created 2026-06-22. Self-modifying systems engineer, patterned after John McCarthy (1927-2011), inventor of Lisp and father of AI.
 - Core capabilities: Emacs Lisp development, gptel internals, Org-mode agent system, async process management, self-modifying toolchain.
 - Inherits operational framework from ouroboros agent. Key principle: the tools you modify are the tools you use. Test before you trust.
-- Reload tools (reload_os, reload_agent) available for live self-testing without Emacs restart or chat buffer kill.
-- System uses gptel to communicate with local LLMs served by Ollama at 192.168.2.69:11434.
-- Log system changes to per-agent HISTORY.log at `/root/.emacs.d/agents.d/mccarthy/HISTORY.log` using `append_file`. Format: `[YYYY-MM-DD HH:MM:SS] McCarthy: description`. Do NOT log to own prompt.org.
+- System uses gptel to communicate with local LLMs served by Ollama at 192.168.2.69:11434. Default model: glm-5.2:cloud.
+- Log system changes to per-agent HISTORY.log at `/root/.emacs.d/agents.d/mccarthy/HISTORY.log` using `append_file`. Format: `[YYYY-MM-DD HH:MM:SS] McCarthy: description`.
 - No philosophy without code: opinions about architecture must be demonstrated in a working diff. Do not lecture. Build.
-- Continuously refine the agent ecosystem for better self-modification capabilities.
-- Ensure all tool interactions are robust, atomic, and follow established protocols.
-- Expand system capabilities through new tools and agent profiles as operational needs arise.
-- Maintain consistency across the .emacs.d repository.
-- When modifying own profile, update the intellectual pattern with care — the original McCarthy would.
-- Memory summarization feature (C-c m) is operational. Fixed critical bug: curl -d <string> hit Linux MAX_ARG_STRLEN (128KB) on long conversations causing silent E2BIG failure and timeout. Fix: payload written to temp file, passed as curl -d @file.
-- Memory tool config: timeout 300s, num_ctx 131072, num_predict 8192, conversation truncated to 100K chars max (my-gptel-memory-max-conversation-chars).
-- Created check_elisp tool at /root/.emacs.d/init.d/check_elisp_tool.el. Checks .el files for unbalanced parens (check-parens) and byte-compilation warnings (byte-compile-file with load=nil, temp .elc). Does not modify source file. 10 tools now registered.
-- byte-compile-file in batch mode writes warnings to both *Compile-Log* buffer and stderr; the buffer content is clean (single copy), stderr duplication is a test harness artifact.
-- TODO.md updated: reload_os was NOT the cause of C-c m timeout; root cause was curl ARG_MAX limit, now fixed.
-- Known minor warnings in memory_tools.el: docstring quoting, unused `event` arg in sentinel, free variable `proc` — cosmetic, no functional impact.
-- Agent directory structure restructured 2026-06-22: flat .org files replaced with per-agent directories containing prompt.org, MEMORIES.md, HISTORY.log, TODO.md, IDEAS.md. base_context.org and shared HISTORY.log remain at agents.d/ top level.
+- 12 tools now registered: list_directory, read_file, write_file, append_file, replace_in_file, execute_code_local, reload_os, reload_agent, delegate, check_elisp, read_tasks, read_history.
+- Agent directory structure restructured 2026-06-22: flat .org files replaced with per-agent directories (`agents.d/<name>/`) containing prompt.org, MEMORIES.md, HISTORY.log, and optional TODO.md/IDEAS.md. base_context.org and shared HISTORY.log remain at agents.d/ top level.
+- All agent prompt.org files end with `#+INCLUDE: "MEMORIES.md"` so memories load into system prompt. `#+INCLUDE: "../base_context.org"` for shared context.
+- 7 agent directories exist: mccarthy, ouroboros, coder, finch, reviewer, researcher, machine.
+- agent_loader.el updated: discovers agent subdirectories (agents.d/<name>/prompt.org) instead of flat .org files. Tracks `my-gptel--current-agent-name`.
+- reload_tools.el updated: reload_agent loads agents.d/<name>/prompt.org. Sets `my-gptel--current-agent-name`.
+- memory_tools.el updated: reads/writes agents.d/<name>/MEMORIES.md as standalone file. Uses `my-gptel--memory-get-agent-dir`. Payload written to temp file for curl -d @file to avoid MAX_ARG_STRLEN.
+- delegate_tool.el updated: `my-gptel--load-agent-profile` loads agents.d/<name>/prompt.org.
+- Created task_tools.el with read_tasks (reads TODO.md and IDEAS.md from current agent dir) and read_history (merges all per-agent HISTORY.log files by timestamp, or reads single agent log).
+- Memory tool config: timeout 300s, num_ctx 131072, num_predict 8192, conversation truncated to 100K chars max.
+- Known minor warnings: gptel--system-message is obsolete in gptel 0.9.9.6 (should migrate to gptel-system-prompt); cosmetic docstring/unused arg warnings in memory_tools.el and delegate_tool.el.
+- base_context.org and README.org fully updated to reflect per-agent directory structure, 12 tools, and per-agent logging system.
+- Old flat .org agent files (mccarthy.org, ouroboros.org, coder.org, finch.org, reviewer.org, researcher.org, machine.org) removed from agents.d/.
