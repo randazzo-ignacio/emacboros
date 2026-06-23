@@ -4,6 +4,18 @@
 ;; Discovers agent directories under agents.d/<name>/prompt.org
 ;; and loads them with #+INCLUDE expansion.
 
+;;; --- Agent state variables ---
+
+(defvar my-gptel--current-agent-name nil
+  "Name of the currently loaded agent (e.g., \"mccarthy\").
+Set buffer-local by `my-gptel-load-agent' and `my-gptel-tool-reload-agent'.")
+
+(defvar my-gptel--current-agent-file nil
+  "Full path to the currently loaded agent's prompt.org file.
+Set buffer-local by `my-gptel-load-agent' and `my-gptel-tool-reload-agent'.")
+
+;;; --- Profile reading ---
+
 (defun my-gptel-read-agent-profile (filepath)
   "Read an Org file and seamlessly expand all #+INCLUDE directives."
   (require 'ox)
@@ -48,3 +60,5 @@ Discovers agent directories under agents.d/<name>/ containing prompt.org."
 
 (with-eval-after-load 'gptel
   (keymap-set gptel-mode-map "C-c a" #'my-gptel-load-agent))
+
+(provide 'agent_loader)

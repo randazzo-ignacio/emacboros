@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 
-(defun ouroboros-replace-in-file (path search-text replace-text)
+(defun my-gptel--fs-replace (path search-text replace-text)
   "Find SEARCH-TEXT in PATH and replace it with REPLACE-TEXT.
 SEARCH-TEXT is matched exactly as provided -- whitespace is significant."
   (condition-case err
@@ -20,6 +20,10 @@ SEARCH-TEXT is matched exactly as provided -- whitespace is significant."
     (error (format "Error: Could not modify file '%s'. Reason: %s"
                    path (error-message-string err)))))
 
+(defun ouroboros-replace-in-file (path search-text replace-text)
+  "Backward-compatible alias for `my-gptel--fs-replace'."
+  (my-gptel--fs-replace path search-text replace-text))
+
 (add-to-list 'gptel-tools
  (gptel-make-tool
   :name "replace_in_file"
@@ -27,4 +31,6 @@ SEARCH-TEXT is matched exactly as provided -- whitespace is significant."
   :args (list '(:name "path" :type "string")
               '(:name "search_text" :type "string")
               '(:name "replace_text" :type "string"))
-  :function #'ouroboros-replace-in-file))
+  :function #'my-gptel--fs-replace))
+
+(provide 'replacement_tool)
