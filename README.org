@@ -39,6 +39,19 @@ A fully containerized, locally-hosted AI workspace inside Emacs. This project le
        - =TODO.md= :: Agent-specific task list (optional).
        - =IDEAS.md= :: Agent-specific ideas file (optional).
   - =Containerfile= :: Blueprint for the Emacs Podman container. Based on =quay.io/fedora/fedora-minimal=, installs Emacs and a full security/networking toolset.
+  - =test/= :: Test suite using ERT (Emacs Regression Testing).
+     - =run-tests.el= :: Batch runner. Loads all source modules, loads all test files, runs ERT. Also instruments source files for coverage when =UNDERCOVER_FORCE=1= is set.
+     - =test-fs.el= :: Tests for =fs_tools.el= (list_directory, read_file, write_file, append_file, replace_in_file).
+     - =test-replace.el= :: Tests for =replacement_tool.el= (edge cases: multi-occurrence, large blocks, special chars).
+     - =test-code.el= :: Tests for =code_tools.el= (async shell execution, exit codes, stderr, timeout). Tagged =:integration=.
+     - =test-delegate.el= :: Tests for =delegate_tool.el= (validation, depth tracking, profile loading, timeout parsing, completion hook).
+     - =test-agent.el= :: Tests for =agent_loader.el= (profile reading, #+INCLUDE expansion, path traversal rejection).
+     - =test-memory.el= :: Tests for =memory_tools.el= (payload construction, memory extraction, entry counting, file I/O, agent dir resolution).
+     - =test-reload.el= :: Tests for =reload_tools.el= (reload_agent, reload_os). Tagged =:integration=.
+     - =test-task.el= :: Tests for =task_tools.el= (TODO/IDEAS reading, single/unified history, invalid name rejection).
+     - =test-check.el= :: Tests for =check_elisp_tool.el= (clean files, unbalanced parens, missing files, no .elc artifacts).
+     - =test-gptel.el= :: Tests for =gptel_setup.el= (backend defined, model defined, host verification).
+     - =test-smoke.el= :: End-to-end smoke tests (module loadability, tool count, tool names, agent dirs). Tagged =:smoke=.
   - =aios.sh= :: Helper script for container management (build, run, rebuild subcommands).
 
 * The Agent System
@@ -71,6 +84,8 @@ The LLM has access to the following capabilities, defined directly in Emacs Lisp
 | reload_agent        | Reloads the current agent's prompt.org without killing the chat.    |
 | delegate            | Spawns a sub-agent with a specific profile to handle a sub-task.     |
 | check_elisp         | Checks .el files for syntax errors, unbalanced parens, and byte-compile warnings. |
+| read_tasks          | Reads TODO.md and IDEAS.md from the current agent's directory.      |
+| read_history        | Reads per-agent or unified HISTORY.log files, sorted by timestamp.  |
 
 * Podman & SELinux Notes (Fedora Silverblue)
 
@@ -115,3 +130,74 @@ The workspace uses a per-agent logging system:
   - Log format includes timestamp: =[YYYY-MM-DD HH:MM:SS] AgentName: description=.
   - The =append_file= tool automatically prepends a newline if the file does not end with one.
   - Agents do NOT append logs to their own =prompt.org=. The =MEMORIES.md= file is maintained via =replace_in_file=, =write_file=, or the memory summarizer (C-c m).
+
+* Testing & Coverage
+
+The framework includes a full ERT (Emacs Regression Testing) suite with 106 tests covering all 14 source modules. Tests are organized one file per module under =test/=, with a batch runner that loads all source modules, loads all test files, and executes the suite.
+
+** Running Tests
+
+Run all tests in batch mode (exits with code 0 on success, 1 on failure):
+
+#+BEGIN_SRC sh
+  emacs --batch -l /root/.emacs.d/test/run-tests.el
+#+END_SRC
+
+Run tests interactively in Emacs:
+
+#+BEGIN_SRC elisp
+  M-x load-file RET /root/.emacs.d/test/run-tests.el RET
+  M-x ert RET t RET
+#+END_SRC
+
+** Running with Coverage
+
+Coverage reporting uses [[https://github.com/sviridov/undercover.el][undercover.el]], which instruments source files via edebug and tracks which lines are executed during the test run. The coverage report is written to =coverage.txt= in the project root.
+
+#+BEGIN_SRC sh
+  UNDERCOVER_FORCE=1 emacs --batch -l /root/.emacs.d/test/run-tests.el
+#+END_SRC
+
+When coverage is enabled, 2 =reload_os= tests are skipped (104 instead of 106) because =reload_os= re-evaluates =init.el=, which triggers re-instrumentation and wipes accumulated frequency counts. This is a known limitation of undercover's edebug-based approach.
+
+** Test Categories
+
+Tests are tagged for selective execution:
+
+| Tag           | Description                                              |
+|---------------+----------------------------------------------------------|
+| =(none)=      | Unit tests. Pure function behavior, no external deps.   |
+| =:integration= | Tests that spawn processes or modify live state.       |
+| =:smoke=      | End-to-end checks that the whole system loads cleanly.   |
+
+Run only specific tags:
+
+#+BEGIN_SRC elisp
+  ;; Run only smoke tests
+  M-x ert RET (tag :smoke) RET
+#+END_SRC
+
+** Current Coverage
+
+As of 2026-06-23 (104 tests with coverage):
+
+| Module               | Coverage | Lines (Covered/Relevant) |
+|----------------------+----------+--------------------------|
+| code_tools.el        |     100% | 27/27                    |
+| check_elisp_tool.el  |      97% | 47/48                    |
+| replacement_tool.el  |      93% | 14/15                    |
+| task_tools.el        |      91% | 62/68                    |
+| fs_tools.el          |      85% | 34/40                    |
+| reload_tools.el      |      63% | 21/33                    |
+| memory_tools.el      |      39% | 50/127                   |
+| delegate_tool.el     |      30% | 29/95                    |
+| agent_loader.el      |      26% | 7/26                     |
+| session_persistence  |       0% | 0/94                     |
+
+** Test Design Principles
+
+- *Bridge tools first:* =fs_tools.el= was the highest priority for testing. If filesystem tools break, the agent goes blind and deaf.
+- *Named defuns:* Source modules were refactored to extract inline lambdas into named =defun=s for testability. This is better code regardless.
+- *Mocking with cl-letf:* External dependencies (Ollama API, SSH, network) are mocked using =cl-letf= to override function bindings temporarily.
+- *Dynamic variable handling:* Tests use =setq= with =unwind-protect= save/restore for =defvar= variables, since =let= bindings don't affect dynamic variables in lexical-binding mode.
+- *Environment-agnostic:* Tests avoid hardcoding environment-specific values (e.g., =$HOME=).
