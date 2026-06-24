@@ -53,10 +53,13 @@ RUN microdnf install -y \
         python3-pip \
     && microdnf clean all
 
+RUN mkdir -p /emacboros/workspace
+RUN mkdir -p /root/.emacs.d
+
 # ---------------------------------------------------------------------------
 # Working directory
 # ---------------------------------------------------------------------------
-WORKDIR /root
+WORKDIR /emacboros/workspace
 
 # Emacs is the entrypoint; .emacs.d is mounted at runtime via emacboros.sh
 ENTRYPOINT ["emacs", "--no-x", "--load", "/root/.emacs.d/init.el"]

@@ -50,7 +50,7 @@
        (source-files
         (mapcar (lambda (f) (expand-file-name f init-dir))
                 (directory-files init-dir nil "\\.el\\'")))
-       (report-path (expand-file-name "coverage.txt" user-emacs-directory)))
+       (report-path (expand-file-name "test/coverage.txt" user-emacs-directory)))
   (undercover--setup
    (append source-files
            (list (list :report-file report-path)

@@ -23,8 +23,8 @@ set -euo pipefail
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE_NAME="agentic-emacs"
-CONTAINER_NAME="emacs-ai-os"
+IMAGE_NAME="emacboros"
+CONTAINER_NAME="emacboros"
 
 # =============================================================================
 # Build the container image from Containerfile
@@ -42,7 +42,8 @@ run() {
     echo "[emacboros] Starting ${CONTAINER_NAME}..."
     podman run \
         --rm -it --name "${CONTAINER_NAME}" \
-        -v "${HOME}/.emacs.d:/root/.emacs.d:Z" \
+	-v "$(dirname ${BASH_SOURCE[0]})/agents.d:/root/.emacs.d/agents.d:Z" \
+	-v "$(dirname ${BASH_SOURCE[0]})/.git:/root/.emacs.d/.git:ro" \
         "${IMAGE_NAME}"
 }
 
@@ -57,7 +58,7 @@ rebuild() {
 # =============================================================================
 # Entrypoint
 # =============================================================================
-case "${1:-run}" in
+case "${1:-rebuild}" in
     build)
         build
         ;;
